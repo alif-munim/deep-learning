@@ -1,3 +1,7 @@
 image-classification/datasets
 image-classification/train
 image-classification/*.h5
+tf-hand-signs/*.png
+tf-hand-signs/data
+clustering/
+regularization/
