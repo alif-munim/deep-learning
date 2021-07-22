@@ -5,3 +5,5 @@ tf-hand-signs/*.png
 tf-hand-signs/data
 clustering/
 regularization/
+tf-skin-cancer/data
+tf-skin-cancer/images
