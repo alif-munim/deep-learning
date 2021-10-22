@@ -7,3 +7,11 @@ clustering/
 regularization/
 tf-skin-cancer/data
 tf-skin-cancer/images
+sandstone-segmentation/images
+sandstone-segmentation/masks
+*.hdf5
+traditional-segmentation/images
+traditional-segmentation/masks
+traditional-segmentation/partial_labels
+traditional-segmentation/*.jpg
+traditional-segmentation/sandstone_model
