@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# # Neural Networks
+# Neural Networks
+# https://pytorch.org/docs/stable/tensorboard.html
 
 # In[1]:
 
@@ -20,6 +21,7 @@
 
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 import torchvision
 import torchvision.transforms as transforms
 import matplotlib.pyplot as plt
@@ -30,7 +32,7 @@ import sys
 
 
 from torch.utils.tensorboard import SummaryWriter
-writer = SummaryWriter("runs/mnist")
+writer = SummaryWriter("runs/mnist2")
 
 
 # In[20]:
@@ -47,7 +49,7 @@ hidden_size = 100
 num_classes = 10
 num_epochs = 2
 batch_size = 100
-learning_rate = 0.001
+learning_rate = 0.01
 
 
 # In[ ]:
@@ -104,6 +106,7 @@ class NeuralNet(nn.Module):
         out = self.l1(x)
         out = self.relu(out)
         out = self.l2(out)
+        # No activation or softmax at the end, applied by CE loss
         return out
 
 
@@ -116,8 +119,6 @@ optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
 writer.add_graph(model, samples.reshape(-1, 28*28))
 writer.close()
-sys.exit()
-
 
 # In[25]:
 
@@ -154,24 +155,42 @@ for epoch in range(num_epochs):
 
 # # In[29]:
 
+class_labels = []
+preds = []
 
 # # Evaluation
-# with torch.no_grad():
-#     n_correct = 0
-#     n_samples = 0
-#     for images, labels in test_loader:
-#         images = images.reshape(-1, 28*28)
-#         outputs = model(images)
+with torch.no_grad():
+    n_correct = 0
+    n_samples = 0
+    for images, labels in test_loader:
+        images = images.reshape(-1, 28*28)
+        outputs = model(images)
         
-#         # value, index of network pred output tensors
-#         _, preds = torch.max(outputs, 1)
-#         n_samples += labels.shape[0]
-#         n_correct += (preds == labels).sum().item()
+        # value, index of network pred output tensors
+        _, predictions = torch.max(outputs, 1)
+        n_samples += labels.shape[0]
+        n_correct += (predictions == labels).sum().item()
         
-#     acc = 100.0 * n_correct / n_samples
-#     print(n_correct)
-#     print(n_samples)
-#     print(f'accuracy = {acc}')
+        class_preds = [F.softmax(output, dim=0) for output in outputs]
+        preds.append(class_preds)
+        class_labels.append(predictions)
+        
+    # 10,000 x 10, probs for each class
+    preds = torch.cat([torch.stack(batch) for batch in preds])
+    # 10,000 x 1
+    class_labels = torch.cat(class_labels)
+   
+    acc = 100.0 * n_correct / n_samples
+    print(f'accuracy = {acc}')
+    
+    classes = range(10)
+    for i in classes:
+        labels_i = class_labels == i 
+        preds_i = preds[:, i]
+        writer.add_pr_curve(str(i), labels_i, preds_i, global_step=0)
+        writer.close()
+        
+sys.exit()
 
 
 # # # Convolutional Neural Networks
